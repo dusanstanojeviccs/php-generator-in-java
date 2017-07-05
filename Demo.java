@@ -1,16 +1,16 @@
 public class Demo {
 	@FunctionalInterface
-    public static interface Iterable {
-        public void execute(int i);
+    public static interface Yieldable {
+        public void yield(int i);
     }
 
-    public static class Iterator {
+    public static class Yielder {
         volatile Thread t;
-        volatile Iterable iterable;
+        volatile Yieldable yieldable;
         volatile Object lock = new Object();
 
-        synchronized public boolean next(Iterable iterable) {
-            this.iterable = iterable;
+        synchronized public boolean next(Yieldable yieldable) {
+            this.yieldable = yieldable;
 
             try {
                 synchronized (lock) {
@@ -23,8 +23,8 @@ public class Demo {
             return t.isAlive();
         }
 
-        void execute(int i) throws InterruptedException {
-            iterable.execute(i);
+        void yield(int i) throws InterruptedException {
+            yieldable.yield(i);
 
             synchronized (lock) {
                 lock.wait();
@@ -34,35 +34,35 @@ public class Demo {
 
     @FunctionalInterface
     public static interface Generator {
-        public void create(Iterator iterator)throws InterruptedException;
+        public void create(Yielder yielder)throws InterruptedException;
     }
 
 
-    public static Iterator generateGenerator(Generator g) {
-        Iterator i = new Iterator();
-        i.t = new Thread(() -> {
+    public static Yielder generateGenerator(Generator g) {
+        Yielder yielder = new Yielder();
+        yielder.t = new Thread(() -> {
             try {
-                synchronized (i.lock) {
-                    i.lock.wait();
+                synchronized (yielder.lock) {
+                    yielder.lock.wait();
                 }
-                g.create(i);
+                g.create(yielder);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
-        i.t.start();
-        return i;
+        yielder.t.start();
+        return yielder;
     }
 
-    public static Iterator fib(int n) {
+    public static Yielder fib(int n) {
 
-        return generateGenerator((iterator) -> {
+        return generateGenerator((yielder) -> {
             int cur = 1;
             int prev = 0;
 
             for (int i = 0; i < n; i++) {
                 System.out.println("Before yield");
-                iterator.execute(cur);
+                yielder.yield(cur);
 
                 int temp = cur;
                 cur = prev + cur;
@@ -72,7 +72,7 @@ public class Demo {
     }
 
 	public static void main(String... args) {
-		Iterator dux = fib(9);
+		Yielder dux = fib(9);
 
         while (dux.next(curr -> System.out.println(curr)));
 	}
