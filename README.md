@@ -5,4 +5,5 @@ Just a small project to demonstrate one possible way of implementing Generator c
 To run Demo.java do:
 
 javac Demo.java
+
 java Demo
